@@ -34,7 +34,7 @@ t_usage() {
   echo
   # :command.usage_commands
   printf "%s\n" "$(bold "Commands:")"
-  printf "  %s   Create a new worktree\n" "$(green "worktree")"
+  printf "  %s   Create a new worktree branch\n" "$(green "worktree")"
   echo
 
   # :command.long_usage
@@ -55,11 +55,11 @@ t_usage() {
 # :command.usage
 t_worktree_usage() {
   if [[ -n $long_usage ]]; then
-    printf "t worktree - Create a new worktree\n"
+    printf "t worktree - Create a new worktree branch\n"
     echo
 
   else
-    printf "t worktree - Create a new worktree\n"
+    printf "t worktree - Create a new worktree branch\n"
     echo
 
   fi
@@ -97,7 +97,7 @@ t_worktree_usage() {
 
     # :command.usage_examples
     printf "%s\n" "$(bold "Examples:")"
-    printf "  t worktree MY_BRANCH\n"
+    printf "  t worktree NEW_BRANCH\n"
     echo
 
   fi
@@ -228,18 +228,38 @@ t_worktree_command() {
   branch=${args[branch]}
   worktreePath=${args[--path]}
   folderName=${PWD##*/}
-  worktreeDest=~/Worktrees/$folderName
+  worktreeDest=~/Worktrees/$branch/$folderName
 
-  echo "Create new worktree for $branch"
+  baseBranch=$(git branch -l main master --format '%(refname:short)')
 
-  if [[ $worktreePath ]]; then
-    worktreeDest=$worktreePath/$folderName
+  # default push up stream
+  noUpStream=0
+
+  # check remote branch exist
+  if git rev-parse --verify --quiet origin/"$branch" >/dev/null 2>&1; then
+    baseBranch="$branch"
+    noUpStream=1
   fi
 
-  echo "$worktreeDest"
-  mkdir -p "$worktreeDest"
+  echo "Create new worktree for $(green "$branch")"
 
-  echo "xx"
+  if [[ $worktreePath ]]; then
+    worktreeDest=$worktreePath/$branch/$folderName
+  fi
+
+  # fetch all branches
+  git fetch --all
+
+  # create worktree
+  git worktree add -b "$branch" "$worktreeDest" origin/"$baseBranch"
+
+  # make and switch to the destination
+  mkdir -p "$worktreeDest" && cd "$_" || exit
+
+  # set upstream
+  if [[ $noUpStream == 0 ]]; then
+    git push origin HEAD
+  fi
 
 }
 
@@ -332,6 +352,14 @@ t_worktree_parse_requirements() {
 
     esac
   done
+
+  # :command.dependencies_filter
+  if command -v git >/dev/null 2>&1; then
+    deps['git']="$(command -v git | head -n1)"
+  else
+    printf "missing dependency: git\n" >&2
+    exit 1
+  fi
 
   # :command.command_filter
   action="worktree"

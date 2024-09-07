@@ -4,7 +4,9 @@ version: 0.1.0
 commands:
   - name: worktree
     alias: wt
-    help: Create a new worktree
+    help: Create a new worktree branch
+    dependencies:
+      - git
     args:
       - name: branch
         required: true
@@ -16,4 +18,4 @@ commands:
         arg: pathName
         validate: dir_exists
     examples:
-      - t worktree MY_BRANCH
+      - t worktree NEW_BRANCH

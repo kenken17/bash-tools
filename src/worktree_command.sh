@@ -1,15 +1,35 @@
 branch=${args[branch]}
 worktreePath=${args[--path]}
 folderName=${PWD##*/}
-worktreeDest=~/Worktrees/$folderName
+worktreeDest=~/Worktrees/$branch/$folderName
 
-echo "Create new worktree for $branch"
+baseBranch=$(git branch -l main master --format '%(refname:short)')
 
-if [[ $worktreePath ]]; then
-  worktreeDest=$worktreePath/$folderName
+# default push up stream
+noUpStream=0
+
+# check remote branch exist
+if git rev-parse --verify --quiet origin/"$branch" >/dev/null 2>&1; then
+  baseBranch="$branch"
+  noUpStream=1
 fi
 
-echo "$worktreeDest"
-mkdir -p "$worktreeDest"
+echo "Create new worktree for $(green "$branch")"
 
-echo "xx"
+if [[ $worktreePath ]]; then
+  worktreeDest=$worktreePath/$branch/$folderName
+fi
+
+# fetch all branches
+git fetch --all
+
+# create worktree
+git worktree add -b "$branch" "$worktreeDest" origin/"$baseBranch"
+
+# make and switch to the destination
+mkdir -p "$worktreeDest" && cd "$_" || exit
+
+# set upstream
+if [[ $noUpStream == 0 ]]; then
+  git push origin HEAD
+fi
