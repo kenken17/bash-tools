@@ -1,0 +1,19 @@
+name: t
+help: Dev Tool
+version: 0.1.0
+commands:
+  - name: worktree
+    alias: wt
+    help: Create a new worktree
+    args:
+      - name: branch
+        required: true
+        help: Branch name that new worktree for
+    flags:
+      - long: --path
+        short: -p
+        help: Path for the new worktree
+        arg: pathName
+        validate: dir_exists
+    examples:
+      - t worktree MY_BRANCH
