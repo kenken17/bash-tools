@@ -10,7 +10,6 @@ noUpStream=0
 
 # check remote branch exist
 if git rev-parse --verify --quiet origin/"$branch" >/dev/null 2>&1; then
-  baseBranch="$branch"
   noUpStream=1
 fi
 
@@ -31,5 +30,5 @@ mkdir -p "$worktreeDest" && cd "$_" || exit
 
 # set upstream
 if [[ $noUpStream == 0 ]]; then
-  git push origin HEAD
+  git push --set-upstream origin "$branch"
 fi
